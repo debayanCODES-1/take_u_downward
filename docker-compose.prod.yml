@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://admin:password123@timescaledb:5432/algoarena?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=supersecretproductionkeychangeinrealworld
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - timescaledb
+      - redis
+    restart: always
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: algoarena
+    volumes:
+      - timescaledb_prod_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_prod_data:/data
+    restart: always
+
+volumes:
+  timescaledb_prod_data:
+  redis_prod_data:
