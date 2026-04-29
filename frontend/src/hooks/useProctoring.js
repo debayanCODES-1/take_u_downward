@@ -20,7 +20,13 @@ export function useProctoring(sessionId) {
     setupCamera();
 
     // 2. Setup WebSocket for real-time reporting
-    wsRef.current = new WebSocket('ws://localhost:3000/ws/proctor');
+    let wsUrl = 'ws://localhost:3000/ws/proctor';
+    if (import.meta.env.VITE_BACKEND_HOST) {
+        wsUrl = `wss://${import.meta.env.VITE_BACKEND_HOST}/ws/proctor`;
+    } else if (import.meta.env.VITE_BACKEND_URL) {
+        wsUrl = import.meta.env.VITE_BACKEND_URL.replace('http', 'ws') + '/ws/proctor';
+    }
+    wsRef.current = new WebSocket(wsUrl);
     wsRef.current.onopen = () => console.log('Connected to proctor engine');
 
     // 3. Tab Visibility Monitoring (Visibility API)
